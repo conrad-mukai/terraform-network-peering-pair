@@ -1,0 +1,9 @@
+# test parameters
+
+region = ""
+cidr_access = []
+ami = ""
+user = ""
+private_key_path = ""
+authorized_key_path = ""
+key_name = ""
