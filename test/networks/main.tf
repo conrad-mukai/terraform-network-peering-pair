@@ -10,7 +10,19 @@ data "aws_availability_zones" "current" {}
 
 locals {
   az1 = "${slice(data.aws_availability_zones.current.names, 0, ceil(1.0*length(data.aws_availability_zones.current.names)/2))}"
+  az1_count = "${length(local.az1)}"
   az2 = "${data.aws_availability_zones.current.names}"
+  az2_count = "${length(local.az2)}"
+}
+
+resource "aws_eip" "network1-nat-eips" {
+  count = "${local.az1_count}"
+  vpc = true
+}
+
+resource "aws_eip" "network1-bastion-eips" {
+  count = "${local.az2_count}"
+  vpc = true
 }
 
 module "network1" {
@@ -28,6 +40,18 @@ module "network1" {
   private_key_path = "${var.private_key_path}"
   authorized_keys_path = "${var.authorized_key_path}"
   key_name = "${var.key_name}"
+  nat_eip_ids = "${aws_eip.network1-nat-eips.*.id}"
+  bastion_eip_ids = "${aws_eip.network1-bastion-eips.*.id}"
+}
+
+resource "aws_eip" "network2-nat-eips" {
+  count = "${local.az2_count}"
+  vpc = true
+}
+
+resource "aws_eip" "network2-bastion-eips" {
+  count = "${local.az2_count}"
+  vpc = true
 }
 
 module "network2" {
@@ -44,4 +68,6 @@ module "network2" {
   private_key_path = "${var.private_key_path}"
   authorized_keys_path = "${var.authorized_key_path}"
   key_name = "${var.key_name}"
+  nat_eip_ids = "${aws_eip.network2-nat-eips.*.id}"
+  bastion_eip_ids = "${aws_eip.network2-bastion-eips.*.id}"
 }
